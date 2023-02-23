@@ -1,0 +1,83 @@
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+using namespace std;
+
+#define N 100
+typedef int semaphore;
+
+pthread_mutex_t p_mutex = PTHREAD_MUTEX_INITIALIZER;
+int counter = 0;
+
+semaphore mutex = 1;
+semaphore empty = N;
+semaphore full = 0;
+
+void *calling_mutex_lock(void *ptr) {
+    pthread_mutex_lock(&p_mutex);
+    counter++;
+    cout << counter << endl;
+    pthread_mutex_unlock(&p_mutex);
+}
+
+int produce_item() {
+
+}
+
+int consume_item() {
+
+}
+
+void *producer(void) {
+  int item;
+
+  while (true) {
+    item = produce_item();
+    sem_wait(&empty);
+    sem_wait(&mutex);
+    insert_item(item);
+    sem_post(&mutex)
+    sem_post(&full);
+  }
+}
+
+void *consumer(void) {
+  int item;
+
+  while (true) {
+    sem_wait(&full);
+    sem_wait(&mutex);
+    item = remove_item();
+    sem_post(&mutex);
+    sem_post(&empty);
+    consume_item(item);
+  }
+}
+
+
+int main() {
+  pthread_t pthread1, pthread2;
+  int thread1, thread2;
+
+  thread1 = pthread_create(&pthread1, NULL, &calling_mutex_lock, NULL);
+  thread2 = pthread_create(&pthread2, NULL, &calling_mutex_lock, NULL);
+
+  if (thread1 = pthread_create(&pthread1, NULL, &calling_mutex_lock, NULL)) {
+      cout << "thread creation failed" << endl;
+  }
+
+  if (thread2 = pthread_create(&pthread2, NULL, &calling_mutex_lock, NULL)) {
+      cout << "thread creation failed" << endl;
+  }
+
+  cout << "thread1 joined" << endl;
+  pthread_join(pthread1, NULL);
+  cout << "thread2 joined" << endl;
+  pthread_join(pthread2, NULL);
+
+  return 0;
+}
+
+
