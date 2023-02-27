@@ -1,91 +1,114 @@
+//Operating Systems - CS444;
+//Spring 2023;
+//Christian Soucy;
+//Assignment Info: Producer-Consumer Problem, Due 02/26/2023;
+//Program Description:
+    //Solves the producer-consumer problem without starvation or deadlocks;
+    //This is done using the condition variables method with mutexes;
+//Last modified: 02/27/2023, 11:52 AM;
+//Youtube Code Review & Demo Link: *PASTE HERE*
+
+//Includes/Namespace://
 #include <iostream>
 #include <stdio.h>
-#include <stdlib.h>
 #include <pthread.h>
-#include <semaphore.h>
+#include <queue>
 using namespace std;
 
-#define N 100
-typedef int semaphore;
+//Defines://
+#define MAX 1000
 
-pthread_mutex_t p_mutex = PTHREAD_MUTEX_INITIALIZER;
-int counter = 0;
+//Global Variables://
+queue<int> buffer;
+pthread_mutex_t the_mutex;
+pthread_cond_t condc, condp;
 
-semaphore mutex = 1;
-semaphore empty = N;
-semaphore full = 0;
+//Functions://
+void *producer(void *ptr) {
+  int i;
 
-void *calling_mutex_lock(void *ptr) {
-    pthread_mutex_lock(&p_mutex);
-    counter++;
-    cout << counter << endl;
-    pthread_mutex_unlock(&p_mutex);
-}
+  for (i = 1; i <= MAX; i++) {
+    cout << endl;
+    cout << "locking buffer for producer..." << endl;
+    cout << endl;
 
-int produce_item() {
+    pthread_mutex_lock(&the_mutex);
 
-}
+    while (buffer.size() != 0) {
+      pthread_cond_wait(&condp, &the_mutex);
+    }
+    buffer.push(i);
 
-int consume_item() {
+    cout << "producer count: " << i;
+    cout << endl;
+    pthread_cond_signal(&condc);
+    pthread_mutex_unlock(&the_mutex);
+    cout << "unlocking mutex after consumer signal is sent" << endl;
 
-}
-
-int insert_item() {
-
-}
-
-int remove_item() {
-
-}
-
-void *producer(void) {
-  int item;
-
-  while (true) {
-    item = produce_item();
-    sem_wait(&empty);
-    sem_wait(&mutex);
-    insert_item(item);
-    sem_post(&mutex)
-    sem_post(&full);
+    if (i == MAX) {
+      cout << "Buffer limit reached. Terminating processes regrading producer." << endl;
+      cout << endl;
+    }
   }
+
+  pthread_exit(0);
 }
 
-void *consumer(void) {
-  int item;
+void *consumer(void *ptr) {
+  int i;
 
-  while (true) {
-    sem_wait(&full);
-    sem_wait(&mutex);
-    item = remove_item();
-    sem_post(&mutex);
-    sem_post(&empty);
-    consume_item(item);
+  for (i = 1; i <= MAX; i++) {
+    cout << endl;
+    cout << "locking buffer for consumer..." << endl;
+    cout << endl;
+
+    pthread_mutex_lock(&the_mutex);
+
+    while (buffer.empty()) {
+      pthread_cond_wait(&condc, &the_mutex);
+    }
+
+    i = buffer.front();
+    buffer.pop();
+
+    cout << "consumer count: " << i;
+    cout << endl;
+
+    pthread_cond_signal(&condp);
+    pthread_mutex_unlock(&the_mutex);
+    cout << "unlocking mutex after producer signal is sent" << endl;
+
+    if (i == MAX) {
+      cout << "Buffer limit reached. Terminating prcesses regrading consumer." << endl;
+    }
   }
+
+  pthread_exit(0);
 }
 
 
+//Main Function://
 int main() {
-  pthread_t pthread1, pthread2;
-  int thread1, thread2;
+  pthread_t p_producer, p_consumer;
 
-  thread1 = pthread_create(&pthread1, NULL, &calling_mutex_lock, NULL);
-  thread2 = pthread_create(&pthread2, NULL, &calling_mutex_lock, NULL);
+  pthread_mutex_init(&the_mutex, 0);
+  pthread_cond_init(&condc, 0);
+  pthread_cond_init(&condp, 0);
+  pthread_create(&p_consumer, 0, consumer, 0);
+  pthread_create(&p_producer, 0, producer, 0);
+  pthread_join(p_producer, 0);
+  pthread_join(p_consumer, 0);
+  pthread_cond_destroy(&condc);
+  pthread_cond_destroy(&condp);
+  pthread_mutex_destroy(&the_mutex);
 
-  if (thread1 = pthread_create(&pthread1, NULL, &calling_mutex_lock, NULL)) {
-      cout << "thread creation failed" << endl;
-  }
+  cout << endl;
 
-  if (thread2 = pthread_create(&pthread2, NULL, &calling_mutex_lock, NULL)) {
-      cout << "thread creation failed" << endl;
-  }
-
-  cout << "thread1 joined" << endl;
-  pthread_join(pthread1, NULL);
-  cout << "thread2 joined" << endl;
-  pthread_join(pthread2, NULL);
-
+//Return://
   return 0;
 }
+
+
+
 
 
